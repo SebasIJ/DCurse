@@ -6,17 +6,18 @@ using UnityEngine.UI;
 
 public class UI : MonoBehaviour
 {
-    public Transform fader;
-    public Transform Lock;
-    public Animator fadeAnim;
-    public Image HP;
-    public Image currentD;
-    public PlayerScript player;
-    public Sprite twoD, threeD, fullHP, midHP, lowHP, emptyHP;
+    public Transform fader; //transform of the fade object
+    public Transform Lock; //transform of the dimension lock
+    public Animator fadeAnim; //animator of the fade object
+    public Image HP; //image of the hp
+    public Image currentD; //image of the current dimension
+    public PlayerScript player; //script of the player movement
+    public Sprite twoD, threeD, fullHP, midHP, lowHP, emptyHP; //sprites of all the hp states and dimensions
 
     // Start is called before the first frame update
     void Start()
     {
+        //sets fade active as soon as the scene loads to complete the transition effect
         fader.gameObject.SetActive(true);
     }
 
@@ -28,11 +29,14 @@ public class UI : MonoBehaviour
         setD();
         setHP();
 
+        //sets state of the lock depending on the player DLock
         Lock.gameObject.SetActive(!player.DLock);
     }
 
+    //sets hp properly
     void setHP()
     {
+        //checks current hp value of the player and displays corresponding sprite
         switch (player.HP)
         {
             case 3:
@@ -58,8 +62,10 @@ public class UI : MonoBehaviour
         }
     }
 
+    //sets current dimension sprite
     void setD()
     {
+        //checks the current dimension from the player script and sets the corresponding sprite
         if (player.dimension)
         {
             currentD.sprite = twoD;
@@ -70,21 +76,27 @@ public class UI : MonoBehaviour
         }
     }
 
+    //scene transition to title screen
     public IEnumerator ToTitle()
     {
         fadeAnim.SetBool("Fading", true);
 
         yield return new WaitForSeconds(2);
 
+        //loads title screen
         SceneManager.LoadScene(0);
     }
 
-    public IEnumerator ToLevel()
+    //scene transition for scenes different from the title screen
+    public IEnumerator ToLevel(int scene)
     {
+        //plays fade animation
         fadeAnim.SetBool("Fading", true);
 
+        //waits for the animation to play
         yield return new WaitForSecondsRealtime(2);
 
-        SceneManager.LoadScene(1);
+        //loads desired scene
+        SceneManager.LoadScene(scene);
     }
 }

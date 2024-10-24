@@ -3703,8 +3703,8 @@ MonoBehaviour:
   sprite: {fileID: 652276122}
   direction: {fileID: 1013305404}
   speed: 30
-  gravityForce: 70
-  jumpHeight: 80
+  gravityForce: 110
+  jumpHeight: 25
   knockForce: 30
   knockTotal: 0.15
   totaliFrames: 240

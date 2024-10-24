@@ -6,33 +6,33 @@ using UnityEngine;
 
 public class PlayerScript : MonoBehaviour
 {
-    public Camera myCamera;
-    public Rigidbody player;
-    public Animator playerAnimator;
-    public Transform sprite;
-    public Transform direction;
-    public float speed;
-    public float gravityForce = 0;
-    public float jumpHeight;
-    private int currentJump = 0;
-    private int playerHP = 3;
-    private bool twoD = true;
-    private bool jump = false;
-    private bool grounded = true;
-    private bool canSwitch = true;
-    private Vector3 input;
-    private float last3D = 0;
-    private float Ztwo = 0;
-    private Vector3 respawn = Vector3.zero;
+    public Camera myCamera;     //the game camera following the player
+    public Rigidbody player;        //player rigidbody component
+    public Animator playerAnimator;     //player animator component
+    public Transform sprite;        //transform of the sprite child object of the player
+    public float speed;     //player movement speed
+    public float gravityForce = 0;      //gravity force
+    public float jumpHeight;        //max jump value
+    private int currentJump = 0;        //jump value of the current jump
+    private int playerHP = 3;       //player hp
+    private bool twoD = true;       //2d is true or false
+    private bool jump = false;      //can jump at the moment or not
+    private bool grounded = true;       //is the player on the ground
+    private bool canSwitch = true;      //can gravity be flipped or not
+    private Vector3 input;      //vector 3 that contains the directional input
+    private float last3D = 0;       //z position of the last flip
+    private float Ztwo = 0;     //z position in 2d
+    private Vector3 respawn = Vector3.zero;     //vector that defines the respawn location
 
-    public float knockForce;
-    private float knockTime = 0;
-    public float knockTotal;
-    private bool knockRight;   
-    public float totaliFrames;
-    private float iFrames = 0;
+    public float knockForce;       //force of the knockout when taking damage
+    private float knockTime = 0;    //time of the current knockback
+    public float knockTotal;        //time a knockback lasts
+    private bool knockRight;        //is the knockback coming from the right
+    public float totaliFrames;      //time invincibility lasts
+    private float iFrames = 0;      //time of the current invincibility
 
 
+    //Getters for the variables the ui needs access to
     public bool dimension
     {
         get
@@ -60,8 +60,8 @@ public class PlayerScript : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        //initializes needed variables
         sprite = transform.Find("Sprite");
-        direction = transform.Find("Direction");
         player = GetComponent<Rigidbody>();
         player.velocity = new Vector3(0, 0, 0);
         myCamera.orthographic = true;
@@ -72,18 +72,6 @@ public class PlayerScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //Sets y velocity to 0 when its greater than 0 due to a bug with the gravity
-        if (player.velocity.y > 0 && jump == false)
-        {
-
-            player.velocity = new Vector3(player.velocity.x, 0, player.velocity.z);
-
-        }
-
-        //applys customizable gravity force
-        Vector3 gravity = -gravityForce * Vector3.up;
-        player.AddForce(gravity, ForceMode.Acceleration);
-
         //save movement input
         input = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
 
@@ -97,6 +85,7 @@ public class PlayerScript : MonoBehaviour
             //sets 2D coordinates (Z should always be 0 in 2D)
             player.position = new Vector3(player.position.x, player.position.y, Ztwo);
 
+            //sets proper camera position
             myCamera.transform.position = new Vector3(player.position.x, player.position.y + 3, Ztwo - 25);
 
             //checks for input to switch dimension to 3D
@@ -121,28 +110,11 @@ public class PlayerScript : MonoBehaviour
                 }
             }
 
-            if (knockTime <= 0)
-            {
-                playerAnimator.SetBool("damage", false);
-                Movement2D();
-            }
-            else
-            {
-                if (knockRight)
-                {
-                    player.velocity = new Vector3(knockForce, knockForce, 0);
-                }
-                else
-                {
-                    player.velocity = new Vector3(-knockForce, knockForce, 0);
-                }
-
-                knockTime -= Time.deltaTime;
-            }
+            
         }
-        else if (!twoD)
+        else if (!twoD) //not twoD means current dimension is 3D
         {
-
+            //sets proper camera position
             myCamera.transform.position = new Vector3(player.position.x - 10, player.position.y + 5, player.position.z - 10);
 
             //checks for input to switch dimension to 2D
@@ -169,32 +141,17 @@ public class PlayerScript : MonoBehaviour
                 }
             }
 
-            if (knockTime <= 0)
-            {
-                playerAnimator.SetBool("damage", false);
-                Movement3D();
-            }
-            else
-            {
-                if (knockRight)
-                {
-                    player.velocity = new Vector3(knockForce, knockForce, 0);
-                }
-                else
-                {
-                    player.velocity = new Vector3(-knockForce, knockForce, 0);
-                }
-
-                knockTime -= Time.deltaTime;
-            }
+            
             
         }
 
+        //getting jump input and checking conditions for jumping
         if (Input.GetKeyDown(KeyCode.X) && jump == false && grounded == true)
         {
             jump = true;
         }
 
+        //decreases invincibility time and sets the transparency effect during invincibility
         if(iFrames > 0)
         {
             iFrames--;
@@ -206,20 +163,88 @@ public class PlayerScript : MonoBehaviour
         }
 
 
-        Jump();
+        
 
         AnimatePlayer();
 
+        //when the player falls below 50 on y calls failsafe
         if (player.position.y <= -50)
         {
             Failsafe();
         }
     }
 
+
+    //player movement is in fixed update to remain similar despite performance
+    private void FixedUpdate()
+    {
+        //Sets y velocity to 0 when its greater than 0 due to a bug with the gravity
+        if (player.velocity.y > 0 && jump == false)
+        {
+
+            player.velocity = new Vector3(player.velocity.x, 0, player.velocity.z);
+
+        }
+
+        //applys customizable gravity force because rigidbody 3d has no custom gravity
+        Vector3 gravity = -gravityForce * Vector3.up;
+        player.AddForce(gravity, ForceMode.Acceleration);
+
+        //applies movement in 2D
+        if (twoD)
+        {
+            //checks if there is a current knockback
+            if (knockTime <= 0)
+            {
+                playerAnimator.SetBool("damage", false);
+                Movement2D();
+            }
+            else //applies knockback
+            {
+                //checks direction to apply knockback in
+                if (knockRight)
+                {
+                    player.velocity = new Vector3(knockForce, knockForce, 0);
+                }
+                else
+                {
+                    player.velocity = new Vector3(-knockForce, knockForce, 0);
+                }
+
+                //decreases knockback time
+                knockTime -= Time.deltaTime;
+            }
+        }
+        else //applies movement in 3D
+        {
+            if (knockTime <= 0)
+            {
+                playerAnimator.SetBool("damage", false);
+                Movement3D();
+            }
+            else
+            {
+                //checks direction to apply knockback in
+                if (knockRight)
+                {
+                    player.velocity = new Vector3(knockForce, knockForce, 0);
+                }
+                else
+                {
+                    player.velocity = new Vector3(-knockForce, knockForce, 0);
+                }
+                //decreases knockback time
+                knockTime -= Time.deltaTime;
+            }
+        }
+
+        Jump();
+    }
+
     //Handles control in 2D state
     private void Movement2D()
     {
-
+        //moves player using the velocity of the rigidbody
         player.velocity = new Vector3(input.x, player.velocity.y, 0).normalized * speed;
 
 
@@ -230,6 +255,7 @@ public class PlayerScript : MonoBehaviour
         }
         else if (input.x < 0)
         {
+            //setting the scale of x to -1 flips the sprite
             sprite.localScale = new Vector3(-1, 1, 1);
         }
     }
@@ -249,11 +275,12 @@ public class PlayerScript : MonoBehaviour
         }
         else if (input.x < 0)
         {
+            //setting the scale of x to -1 flips the sprite
             sprite.localScale = new Vector3(-1, 1, 1);
         }
     }
 
-
+    //handles animation parameters that depend on what the player is doing at the moment
     private void AnimatePlayer()
     {
         //Animation parameters
@@ -262,49 +289,52 @@ public class PlayerScript : MonoBehaviour
         playerAnimator.SetBool("grounded", grounded);
     }
 
+    //player jumping
     private void Jump()
     {
+        //checks if the key is still pressed to make the jump longer
         if (jump == true && currentJump > 0 && Input.GetKey(KeyCode.X))
         {
-            //player.AddForce(player.velocity.x*2, jumpHeight - (currentJump/3), player.velocity.z*2, ForceMode.Impulse);
+            //Checks current dimension
             if (twoD)
             {
-                //player.velocity = new Vector3(player.velocity.x, jumpHeight - (currentJump / 2), player.velocity.z);
-                player.velocity = new Vector3(input.x * speed, jumpHeight * (currentJump / jumpHeight), 0);
+                //applies jump force in 2D movement
+                player.velocity = new Vector3(input.x * speed, jumpHeight * (currentJump / jumpHeight) *2, 0);
+            }
+            else if (!twoD)
+            {
+                //applies jump force in 3D movement
+                Matrix4x4 isoMatrix = Matrix4x4.Rotate(Quaternion.Euler(0, 45, 0));
+                player.velocity = isoMatrix.MultiplyPoint3x4((new Vector3(input.x, 0, input.z).normalized * speed) + new Vector3(0, jumpHeight * (currentJump / jumpHeight) *2, 0));
+            }
+            //decreases current jump until it reaches 0
+            currentJump--;
+
+            //after jump grounded is set to false
+            grounded = false;
+        }
+        else if (grounded == false) //handles falling after jumping
+        {
+            //sets current jump to 0 to avoid unintended double jumps
+            currentJump = 0;
+
+            //checks dimension to apply fall in current dimension
+            if (twoD)
+            {
+                player.velocity = new Vector3(input.x * speed, player.velocity.y, 0);
             }
             else if (!twoD)
             {
                 Matrix4x4 isoMatrix = Matrix4x4.Rotate(Quaternion.Euler(0, 45, 0));
-                player.velocity = isoMatrix.MultiplyPoint3x4((new Vector3(input.x, 0, input.z).normalized * speed) + new Vector3(0, jumpHeight * (currentJump / jumpHeight), 0));
-            }
-            currentJump--;
-
-            grounded = false;
-        }
-        else if (grounded == false)
-        {
-            currentJump = 0;
-
-            if (currentJump < 1)
-            {
-                //player.AddForce(player.velocity.x*2 , 0, player.velocity.z*2, ForceMode.Impulse);
-                //player.velocity = new Vector3(player.velocity.x, player.velocity.y, player.velocity.z);
-
-                if (twoD)
-                {
-                    player.velocity = new Vector3(input.x * speed, player.velocity.y, 0);
-                }
-                else if (!twoD)
-                {
-                    Matrix4x4 isoMatrix = Matrix4x4.Rotate(Quaternion.Euler(0, 45, 0));
-                    player.velocity = isoMatrix.MultiplyPoint3x4((new Vector3(input.x, 0, input.z).normalized * speed) + new Vector3(0, player.velocity.y, 0));
-                }
+                player.velocity = isoMatrix.MultiplyPoint3x4((new Vector3(input.x, 0, input.z).normalized * speed) + new Vector3(0, player.velocity.y, 0));
             }
 
+            //keeps jump as false while landing
             jump = false;
         }
     }
 
+    //Failsafe respawns the player in a determined location that can be altered if checkpoints are implemented
     public void Failsafe()
     {
         Ztwo = respawn.z;
@@ -313,16 +343,23 @@ public class PlayerScript : MonoBehaviour
         playerHP = 3;
     }
 
+    //collision enter events
     private void OnCollisionEnter(Collision collision)
     {
-
-        jump = false;
-        grounded = true;
-        currentJump = (int)jumpHeight;
+        //what happens after landing from a jump
+        //raycast checks if the collision is below the player
+        if (Physics.Raycast(player.position, Vector3.down, 5f))
+        {
+            jump = false;
+            grounded = true;
+            currentJump = (int)jumpHeight;
+        }
     }
 
+    //collision exit events
     private void OnCollisionExit(Collision collision)
     {
+        //leaving a collision after jumping
         if (player.velocity.y < 0)
         {
             jump = false;
@@ -330,65 +367,85 @@ public class PlayerScript : MonoBehaviour
         }
     }
 
+    //trigger enter events
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.CompareTag("NoSwitch"))
+        //event depends on trigger object tag
+        switch (other.gameObject.tag)
         {
-            canSwitch = false;
-        }
-        else if (other.gameObject.CompareTag("SetZ"))
-        {
-            Ztwo = other.gameObject.transform.position.z;
-        }
-        else if (other.gameObject.CompareTag("Entity") || other.gameObject.CompareTag("Entity2D") || other.gameObject.CompareTag("Entity3D"))
-        {
-            if(iFrames <= 0)
-            {
-                if (playerHP > 1)
+            //no switch area trigger preventing dimension switching
+            case "NoSwitch":
                 {
-                    playerAnimator.SetBool("damage", true);
-                    playerHP--;
-                    knockTime = knockTotal;
-                    iFrames = totaliFrames;
-                    if (other.transform.position.x >= player.position.x)
-                    {
-                        knockRight = false;
-                    }
-                    else
-                    {
-                        knockRight = true;
-                    }
+                    canSwitch = false;
+                    break;
                 }
-                else if(playerHP == 1)
+            //trigger area that defines a new default 2d z axis, allowing for 3d depth
+            case "SetZ":
                 {
-                    playerHP--;
-                    knockTime = knockTotal;
-                    player.GetComponent<BoxCollider>().isTrigger = true;
-                    playerAnimator.SetBool("dead", true);
-                    StartCoroutine(GameOver());
+                    Ztwo = other.gameObject.transform.position.z;
+                    break;
                 }
-            }
-            
+            //entity triggers that damage the player
+            case "Entity":
+            case "Entity2D":
+            case "Entity3D":
+                {
+                    if (iFrames <= 0)
+                    {
+                        if (playerHP > 1)
+                        {
+                            playerAnimator.SetBool("damage", true);
+                            playerHP--;
+                            knockTime = knockTotal;
+                            iFrames = totaliFrames;
+                            if (other.transform.position.x >= player.position.x)
+                            {
+                                knockRight = false;
+                            }
+                            else
+                            {
+                                knockRight = true;
+                            }
+                        }
+                        else if (playerHP == 1)
+                        {
+                            playerHP--;
+                            knockTime = knockTotal;
+                            player.GetComponent<BoxCollider>().isTrigger = true;
+                            playerAnimator.SetBool("dead", true);
+                            StartCoroutine(GameOver());
+                        }
+                    }
+                    break;
+                }
         }
+        
     }
 
+    //trigger exit events
     private void OnTriggerExit(Collider other)
     {
+        //leaving a no switch area allowing dimension switch again
         if (other.gameObject.CompareTag("NoSwitch"))
         {
             canSwitch = true;
         }
     }
 
+    //teleports the player close to the failsafe area for the restart option in the pause menu
     public void Respawn()
     {
         player.position = new Vector3(0, -40, 0);
     }
 
+    //game over event, ienumerator allows to delay code for some time
+    //that way the game over animation can play before respawning
     private IEnumerator GameOver()
     {
+        //wait for one second
         yield return new WaitForSeconds(1);
 
+        //sets player collider to is trigger allowing to fall through the level in game over state
         playerAnimator.SetBool("dead", false);
         player.GetComponent<BoxCollider>().isTrigger = false;
         Failsafe();
