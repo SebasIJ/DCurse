@@ -3,13 +3,16 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PlayerScript : MonoBehaviour
 {
-    public Camera myCamera;     //the game camera following the player
+    public UI gameOver;
     public Rigidbody player;        //player rigidbody component
     public Animator playerAnimator;     //player animator component
     public Transform sprite;        //transform of the sprite child object of the player
+    public Transform shadowSprite; //transform of the shadow sprite
+    public Transform cameraTf; //transform of the camera
     public float speed;     //player movement speed
     public float gravityForce = 0;      //gravity force
     public float jumpHeight;        //max jump value
@@ -57,6 +60,14 @@ public class PlayerScript : MonoBehaviour
         }
     }
 
+    public float ZTWO
+    {
+        get
+        {
+            return Ztwo;
+        }
+    }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -64,9 +75,9 @@ public class PlayerScript : MonoBehaviour
         sprite = transform.Find("Sprite");
         player = GetComponent<Rigidbody>();
         player.velocity = new Vector3(0, 0, 0);
-        myCamera.orthographic = true;
         twoD = true;
         Time.timeScale = 1;
+        last3D = player.position.z;
     }
 
     // Update is called once per frame
@@ -75,35 +86,18 @@ public class PlayerScript : MonoBehaviour
         //save movement input
         input = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
 
-
-
         //boolean twoD determines the current dimension
         if (twoD)
         {
-
-
             //sets 2D coordinates (Z should always be 0 in 2D)
             player.position = new Vector3(player.position.x, player.position.y, Ztwo);
-
-            //sets proper camera position
-            myCamera.transform.position = new Vector3(player.position.x, player.position.y + 3, Ztwo - 25);
 
             //checks for input to switch dimension to 3D
             if (Input.GetKeyUp(KeyCode.Z))
             {
                 if (canSwitch)
                 {
-                    myCamera.orthographic = false; //sets camera type to perspective
-                    twoD = false; //if twoD is false the current dimension is 3D
-
-                    //Sets the camera transform apropiately for the current view
-                    myCamera.transform.position = new Vector3(player.position.x - 10, player.position.y + 5, player.position.z - 10);
-                    myCamera.transform.rotation = Quaternion.Euler(new Vector3(10, 45, 0));
-                    myCamera.farClipPlane = 100;
-
-
-                    //Rotates sprite to face camera
-                    sprite.rotation = Quaternion.Euler(new Vector3(0, 45, 0));
+                    twoD = false; //if twoD is false the current dimension is 3D               
 
                     //sets 3D coordinates
                     player.position = new Vector3(player.position.x, player.position.y, last3D);
@@ -114,21 +108,15 @@ public class PlayerScript : MonoBehaviour
         }
         else if (!twoD) //not twoD means current dimension is 3D
         {
-            //sets proper camera position
-            myCamera.transform.position = new Vector3(player.position.x - 10, player.position.y + 5, player.position.z - 10);
+            //Rotates sprite to face camera
+            sprite.rotation = Quaternion.Euler(new Vector3(0, cameraTf.rotation.eulerAngles.y, 0));
 
             //checks for input to switch dimension to 2D
             if (Input.GetKeyUp(KeyCode.Z))
             {
                 if (canSwitch)
                 {
-                    myCamera.orthographic = true; //sets camera type to orthographic
                     twoD = true; //if twoD is true current dimension is 2D
-
-                    //Sets the camera transform apropiately for the current view
-                    myCamera.transform.position = new Vector3(player.position.x, player.position.y + 3, Ztwo - 25);
-                    myCamera.transform.rotation = Quaternion.Euler(new Vector3(0, 0, 0));
-                    myCamera.farClipPlane = 50;
 
                     //Rotates sprite to face camera
                     sprite.rotation = Quaternion.Euler(new Vector3(0, 0, 0));
@@ -163,7 +151,7 @@ public class PlayerScript : MonoBehaviour
         }
 
 
-        
+        PlaceShadow();
 
         AnimatePlayer();
 
@@ -264,7 +252,7 @@ public class PlayerScript : MonoBehaviour
     private void Movement3D()
     {
         //multiplying the regular movement vector by a matrix skewed by 45 degrees achieves the proper isometric movement
-        Matrix4x4 isoMatrix = Matrix4x4.Rotate(Quaternion.Euler(0, 45, 0));
+        Matrix4x4 isoMatrix = Matrix4x4.Rotate(Quaternion.Euler(0, cameraTf.rotation.eulerAngles.y, 0));
         player.velocity = isoMatrix.MultiplyPoint3x4(new Vector3(input.x, player.velocity.y, input.z).normalized * speed);
 
 
@@ -304,7 +292,7 @@ public class PlayerScript : MonoBehaviour
             else if (!twoD)
             {
                 //applies jump force in 3D movement
-                Matrix4x4 isoMatrix = Matrix4x4.Rotate(Quaternion.Euler(0, 45, 0));
+                Matrix4x4 isoMatrix = Matrix4x4.Rotate(Quaternion.Euler(0, cameraTf.rotation.eulerAngles.y, 0));
                 player.velocity = isoMatrix.MultiplyPoint3x4((new Vector3(input.x, 0, input.z).normalized * speed) + new Vector3(0, jumpHeight * (currentJump / jumpHeight) *2, 0));
             }
             //decreases current jump until it reaches 0
@@ -325,7 +313,7 @@ public class PlayerScript : MonoBehaviour
             }
             else if (!twoD)
             {
-                Matrix4x4 isoMatrix = Matrix4x4.Rotate(Quaternion.Euler(0, 45, 0));
+                Matrix4x4 isoMatrix = Matrix4x4.Rotate(Quaternion.Euler(0, cameraTf.rotation.eulerAngles.y, 0));
                 player.velocity = isoMatrix.MultiplyPoint3x4((new Vector3(input.x, 0, input.z).normalized * speed) + new Vector3(0, player.velocity.y, 0));
             }
 
@@ -348,7 +336,13 @@ public class PlayerScript : MonoBehaviour
     {
         //what happens after landing from a jump
         //raycast checks if the collision is below the player
-        if (Physics.Raycast(player.position, Vector3.down, 5f))
+        if (Physics.Raycast(player.position, Vector3.down, this.GetComponent<BoxCollider>().size.y /2 + 0.1f, Physics.AllLayers, QueryTriggerInteraction.Ignore))
+        {
+            jump = false;
+            grounded = true;
+            currentJump = (int)jumpHeight;
+        }
+        else if (Physics.Raycast(player.position, Vector3.up, this.GetComponent<BoxCollider>().size.y / 2 + 0.1f, Physics.AllLayers, QueryTriggerInteraction.Ignore))
         {
             jump = false;
             grounded = true;
@@ -368,7 +362,7 @@ public class PlayerScript : MonoBehaviour
     }
 
     //trigger enter events
-    private void OnTriggerEnter(Collider other)
+    private void OnTriggerStay(Collider other)
     {
         //event depends on trigger object tag
         switch (other.gameObject.tag)
@@ -383,6 +377,10 @@ public class PlayerScript : MonoBehaviour
             case "SetZ":
                 {
                     Ztwo = other.gameObject.transform.position.z;
+                    if (twoD)
+                    {
+                        last3D = Ztwo;
+                    }
                     break;
                 }
             //entity triggers that damage the player
@@ -418,6 +416,11 @@ public class PlayerScript : MonoBehaviour
                     }
                     break;
                 }
+            case "Respawn":
+                {
+                    respawn = other.transform.position;
+                    break;
+                }
         }
         
     }
@@ -448,6 +451,20 @@ public class PlayerScript : MonoBehaviour
         //sets player collider to is trigger allowing to fall through the level in game over state
         playerAnimator.SetBool("dead", false);
         player.GetComponent<BoxCollider>().isTrigger = false;
-        Failsafe();
+        StartCoroutine(gameOver.ToLevel(SceneManager.GetActiveScene().buildIndex));
+    }
+
+    private void PlaceShadow()
+    {
+        //A ray is sent downwards placing the shadow where it collides with an object
+        if(Physics.Raycast(player.transform.position, Vector3.down, out RaycastHit hitInfo, 100, Physics.AllLayers, QueryTriggerInteraction.Ignore))
+        {
+            shadowSprite.gameObject.SetActive(true);
+            shadowSprite.position = hitInfo.point + new Vector3(0, 0.1f, 0);
+        }
+        else
+        {
+            shadowSprite.gameObject.SetActive(false);
+        }
     }
 }

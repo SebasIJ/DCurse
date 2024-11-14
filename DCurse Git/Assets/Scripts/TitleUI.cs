@@ -52,7 +52,7 @@ public class TitleUI : MonoBehaviour
             //moves logo into visible centered position
             if (logo.position.y > 1150)
             {
-                logo.position = new Vector3(logo.position.x, logo.position.y - 2, logo.position.z);
+                logo.position = new Vector3(logo.position.x, logo.position.y - 6, logo.position.z);
             }
             else
             {
