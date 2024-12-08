@@ -18,7 +18,7 @@ public class OneWayPlatform : MonoBehaviour
         
     }
 
-    private void OnTriggerEnter(Collider other)
+    private void OnTriggerStay(Collider other)
     {
         //when the player enters the trigger below the platform the collision between them gets ignored
         if(other.tag == "Player")

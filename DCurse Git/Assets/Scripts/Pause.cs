@@ -11,6 +11,8 @@ public class Pause : MonoBehaviour
     public PlayerScript player; //movement script of the player
     public UI ui; //main ui script
 
+    public AudioSource pauseSound;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -38,6 +40,7 @@ public class Pause : MonoBehaviour
 
     public void Paused()
     {
+        pauseSound.Play();
         pauseMenu.SetActive(true); //sets pause menu as active
         pauseAnim.SetBool("Paused", true); //plays the pause animation of the puse menu
         toHide.SetActive(false); //deactivates the rest of the ui
@@ -47,6 +50,7 @@ public class Pause : MonoBehaviour
 
     public void Resume()
     {
+        pauseSound.Play();
         pauseAnim.SetBool("Paused", false); //plays the unpaused animation for the pause menu
         StartCoroutine(animExit()); //starts animexit ienumerator function       
         isPaused = false; //game is no longer paused
@@ -54,6 +58,7 @@ public class Pause : MonoBehaviour
 
     public void Restart()
     {
+        pauseSound.Play();
         pauseAnim.SetBool("Paused", false); //plays the unpaused animation for the pause menu
         StartCoroutine(ExitAndRespawn()); //starts exit and respawn ienumerator function
         isPaused = false; //game is no longer paused
@@ -61,6 +66,7 @@ public class Pause : MonoBehaviour
 
     public void Exit()
     {
+        pauseSound.Play();
         Time.timeScale = 1f; //sets time scale back to normal
         isPaused = false; //game is no longer paused
         StartCoroutine(ui.ToTitle()); //calls totitle function of the main ui script

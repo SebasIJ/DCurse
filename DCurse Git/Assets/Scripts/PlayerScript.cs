@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 
 public class PlayerScript : MonoBehaviour
 {
-    public UI gameOver;
+    public UI gameOver;         //UI script to reset the level after dying
     public Rigidbody player;        //player rigidbody component
     public Animator playerAnimator;     //player animator component
     public Transform sprite;        //transform of the sprite child object of the player
@@ -25,7 +25,7 @@ public class PlayerScript : MonoBehaviour
     private Vector3 input;      //vector 3 that contains the directional input
     private float last3D = 0;       //z position of the last flip
     private float Ztwo = 0;     //z position in 2d
-    private Vector3 respawn = Vector3.zero;     //vector that defines the respawn location
+    public Transform respawn;     //vector that defines the respawn location
 
     public float knockForce;       //force of the knockout when taking damage
     private float knockTime = 0;    //time of the current knockback
@@ -33,6 +33,11 @@ public class PlayerScript : MonoBehaviour
     private bool knockRight;        //is the knockback coming from the right
     public float totaliFrames;      //time invincibility lasts
     private float iFrames = 0;      //time of the current invincibility
+
+    public AudioSource jumpSound;
+    public AudioSource damageSound;
+    public AudioSource flipSound;
+    public AudioSource deathSound;
 
 
     //Getters for the variables the ui needs access to
@@ -58,6 +63,13 @@ public class PlayerScript : MonoBehaviour
         {
             return playerHP;
         }
+        set
+        {
+            if(value <= 3)
+            {
+                playerHP = value;
+            }
+        }
     }
 
     public float ZTWO
@@ -78,6 +90,7 @@ public class PlayerScript : MonoBehaviour
         twoD = true;
         Time.timeScale = 1;
         last3D = player.position.z;
+        player.position = respawn.position;
     }
 
     // Update is called once per frame
@@ -101,12 +114,14 @@ public class PlayerScript : MonoBehaviour
 
                     //sets 3D coordinates
                     player.position = new Vector3(player.position.x, player.position.y, last3D);
+
+                    flipSound.Play();
                 }
             }
 
             
         }
-        else if (!twoD) //not twoD means current dimension is 3D
+        else //not twoD means current dimension is 3D
         {
             //Rotates sprite to face camera
             sprite.rotation = Quaternion.Euler(new Vector3(0, cameraTf.rotation.eulerAngles.y, 0));
@@ -126,17 +141,17 @@ public class PlayerScript : MonoBehaviour
 
                     //sets 2D coordinates (Z should always be 0 in 2D)
                     player.position = new Vector3(player.position.x, player.position.y, Ztwo);
-                }
-            }
 
-            
-            
+                    flipSound.Play();
+                }
+            }           
         }
 
         //getting jump input and checking conditions for jumping
         if (Input.GetKeyDown(KeyCode.X) && jump == false && grounded == true)
         {
             jump = true;
+            jumpSound.Play();
         }
 
         //decreases invincibility time and sets the transparency effect during invincibility
@@ -325,14 +340,16 @@ public class PlayerScript : MonoBehaviour
     //Failsafe respawns the player in a determined location that can be altered if checkpoints are implemented
     public void Failsafe()
     {
-        Ztwo = respawn.z;
-        player.position = respawn;
+        Ztwo = respawn.position.z;
+        player.position = respawn.position;
         player.velocity = Vector3.zero;
-        playerHP = 3;
+
+        cameraTf.position = player.position;
+        deathSound.Play();
     }
 
     //collision enter events
-    private void OnCollisionEnter(Collision collision)
+    private void OnCollisionStay(Collision collision)
     {
         //what happens after landing from a jump
         //raycast checks if the collision is below the player
@@ -396,6 +413,7 @@ public class PlayerScript : MonoBehaviour
                             playerHP--;
                             knockTime = knockTotal;
                             iFrames = totaliFrames;
+                            damageSound.Play();
                             if (other.transform.position.x >= player.position.x)
                             {
                                 knockRight = false;
@@ -411,14 +429,16 @@ public class PlayerScript : MonoBehaviour
                             knockTime = knockTotal;
                             player.GetComponent<BoxCollider>().isTrigger = true;
                             playerAnimator.SetBool("dead", true);
+                            deathSound.Play();
                             StartCoroutine(GameOver());
                         }
                     }
+                    
                     break;
                 }
             case "Respawn":
                 {
-                    respawn = other.transform.position;
+                    respawn = other.transform;
                     break;
                 }
         }
