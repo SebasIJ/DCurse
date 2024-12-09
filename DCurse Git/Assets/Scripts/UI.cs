@@ -14,6 +14,8 @@ public class UI : MonoBehaviour
     public PlayerScript player; //script of the player movement
     public Sprite twoD, threeD, fullHP, midHP, lowHP, emptyHP; //sprites of all the hp states and dimensions
 
+    public AudioSource fadeAudio;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -79,6 +81,7 @@ public class UI : MonoBehaviour
     //scene transition to title screen
     public IEnumerator ToTitle()
     {
+        fadeAudio.Play();
         fadeAnim.SetBool("Fading", true);
 
         yield return new WaitForSeconds(2);
@@ -91,6 +94,7 @@ public class UI : MonoBehaviour
     public IEnumerator ToLevel(int scene)
     {
         //plays fade animation
+        fadeAudio.Play();
         fadeAnim.SetBool("Fading", true);
 
         //waits for the animation to play

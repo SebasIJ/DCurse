@@ -20,7 +20,7 @@ public class TowerCamera : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
         twoD = playerInfo.dimension;
         Ztwo = playerInfo.ZTWO;
@@ -37,11 +37,11 @@ public class TowerCamera : MonoBehaviour
             //adjusts camera height dinamically to help with platforming
             if (myCamera.transform.position.y < playerPos.position.y - 2)
             {
-                myCamera.transform.Translate(new Vector3(0, 0.04f, 0));
+                myCamera.transform.Translate(new Vector3(0, 0.2f, 0));
             }
             else if (myCamera.transform.position.y > playerPos.position.y + 2)
             {
-                myCamera.transform.Translate(new Vector3(0, -0.04f, 0));
+                myCamera.transform.Translate(new Vector3(0, -0.2f, 0));
             }
 
             myCamera.orthographic = true; //sets camera type to orthographic
@@ -61,11 +61,11 @@ public class TowerCamera : MonoBehaviour
             //adjusts camera height dinamically to help with platforming
             if (myCamera.transform.position.y < playerPos.position.y + 6)
             {
-                myCamera.transform.Translate(new Vector3(0, 0.04f, 0));
+                myCamera.transform.Translate(new Vector3(0, 0.2f, 0));
             }
             else if (myCamera.transform.position.y > playerPos.position.y + 8)
             {
-                myCamera.transform.Translate(new Vector3(0, -0.04f, 0));
+                myCamera.transform.Translate(new Vector3(0, -0.2f, 0));
             }
 
             myCamera.fieldOfView = 70;

@@ -39,6 +39,8 @@ public class PlayerScript : MonoBehaviour
     public AudioSource flipSound;
     public AudioSource deathSound;
 
+    public int keyCollected = 0;
+
 
     //Getters for the variables the ui needs access to
     public bool dimension

@@ -41,6 +41,9 @@ public class Witch : MonoBehaviour
     public Transform mainPlatform;
     public Transform[] spawns;
 
+    public AudioSource castSound;
+    public AudioSource damageSound;
+
 
     // Start is called before the first frame update
     void Start()
@@ -255,10 +258,12 @@ public class Witch : MonoBehaviour
         }
         else if (transform.position.y <= 0 && HP > 0)
         {
+            damageSound.Play();
             fallSpeed = -fallSpeed*2;
         }
         else if (transform.position.y <= 5 && HP == 1)
         {
+            damageSound.Play();
             HP--;
             fallSpeed = fallSpeed * 0.1f;            
             transform.position = new Vector3(transform.position.x, transform.position.y, -20);
@@ -271,6 +276,12 @@ public class Witch : MonoBehaviour
         {
             transform.Translate(Vector3.down * Time.deltaTime * flySpeed);
         }
+
+        if(currentCast == castTime)
+        {
+            castSound.Play();
+        }
+
 
         if(currentCast > 0)
         {

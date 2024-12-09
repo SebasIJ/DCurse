@@ -14,6 +14,8 @@ public class TitleUI : MonoBehaviour
     private bool started = false; //was the start button pressed yet
     private float currentMovement = 0; //current movement of the objects after starting
 
+    public AudioSource fadeAudio;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -92,6 +94,7 @@ public class TitleUI : MonoBehaviour
     //plays fade animation and transitions scene
     IEnumerator PlayGame()
     {
+        fadeAudio.Play();
         fadeAnim.SetBool("Fading", true);
 
         yield return new WaitForSeconds(2);
