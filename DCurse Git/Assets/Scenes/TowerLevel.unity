@@ -239,6 +239,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Spider
       objectReference: {fileID: 0}
+    - target: {fileID: 1185633019981628998, guid: fec0ad236f245ee46aeda7e191a98d2e, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7795464027852984614, guid: fec0ad236f245ee46aeda7e191a98d2e, type: 3}
       propertyPath: m_LocalPosition.x
       value: -5.548113
@@ -295,6 +299,10 @@ PrefabInstance:
     - target: {fileID: 1185633019981628998, guid: fec0ad236f245ee46aeda7e191a98d2e, type: 3}
       propertyPath: m_Name
       value: Spider (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 1185633019981628998, guid: fec0ad236f245ee46aeda7e191a98d2e, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7795464027852984614, guid: fec0ad236f245ee46aeda7e191a98d2e, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1665,7 +1673,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!135 &348776344
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -2723,6 +2731,10 @@ PrefabInstance:
     - target: {fileID: 1185633019981628998, guid: fec0ad236f245ee46aeda7e191a98d2e, type: 3}
       propertyPath: m_Name
       value: Spider (2)
+      objectReference: {fileID: 0}
+    - target: {fileID: 1185633019981628998, guid: fec0ad236f245ee46aeda7e191a98d2e, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7795464027852984614, guid: fec0ad236f245ee46aeda7e191a98d2e, type: 3}
       propertyPath: m_LocalPosition.x
@@ -6825,7 +6837,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1426198013
 MonoBehaviour:
   m_ObjectHideFlags: 0
