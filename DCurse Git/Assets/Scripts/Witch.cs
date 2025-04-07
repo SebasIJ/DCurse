@@ -14,6 +14,15 @@ public class Witch : MonoBehaviour
         falling
     }
 
+    public class attackPattern
+    {
+        public int atckId;
+        public attackPattern next;
+    }
+
+    attackPattern headAttack;
+    attackPattern nextAttack;
+
     public Transform shadowSprite;
     public Animator witchAnim;
     private WitchState currentState;
@@ -32,10 +41,10 @@ public class Witch : MonoBehaviour
     public GameObject warningSprite;
     public LevelClear defeatClear;
     public ParticleSystem castEffect;
-    private int HP = 3;   
+    private int HP = 3;
     private bool canHit = true;
     private bool targetSet = false;
-    private bool sinkAtk= false;
+    private bool sinkAtk = false;
     private bool lightAtk = false;
     private System.Random RNG = new System.Random();
     public Transform mainPlatform;
@@ -48,6 +57,7 @@ public class Witch : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        generatePattern();
         currentState = WitchState.flying;
         castEffect.Stop();
     }
@@ -56,7 +66,7 @@ public class Witch : MonoBehaviour
     void Update()
     {
         PlaceShadow();
-        AnimateWitch();       
+        AnimateWitch();
     }
 
     private void FixedUpdate()
@@ -86,7 +96,7 @@ public class Witch : MonoBehaviour
         }
         SinkAttack();
 
-        if(transform.position.y < -2)
+        if (transform.position.y < -2)
         {
             StartCoroutine(defeatClear.waitLand());
         }
@@ -115,7 +125,7 @@ public class Witch : MonoBehaviour
                 witchAnim.SetBool("Casting", false);
                 witchAnim.SetBool("Damage", false);
                 break;
-                
+
             case WitchState.casting:
                 witchAnim.SetBool("Flying", false);
                 witchAnim.SetBool("Casting", true);
@@ -138,7 +148,7 @@ public class Witch : MonoBehaviour
             castTime = castTime -= 60;
             canHit = false;
             currentState = WitchState.falling;
-        }        
+        }
     }
 
     private void FlyState()
@@ -146,21 +156,21 @@ public class Witch : MonoBehaviour
         currentPause = fallPause;
         currentCast = castTime;
 
-        if(transform.position.y >= 32)
+        if (transform.position.y >= 32)
         {
             transform.Translate(Vector3.down * Time.deltaTime * flySpeed);
         }
 
         if (!targetSet)
         {
-            switch (RNG.Next(1,4))
+            switch (RNG.Next(1, 4))
             {
                 case 1:
                     {
                         flyTarget = 20;
-                        if(lastTarget == flyTarget)
+                        if (lastTarget == flyTarget)
                         {
-                            switch (RNG.Next(1,3))
+                            switch (RNG.Next(1, 3))
                             {
                                 case 1:
                                     {
@@ -182,7 +192,7 @@ public class Witch : MonoBehaviour
                         flyTarget = 0;
                         if (lastTarget == flyTarget)
                         {
-                            switch (RNG.Next(1,3))
+                            switch (RNG.Next(1, 3))
                             {
                                 case 1:
                                     {
@@ -204,7 +214,7 @@ public class Witch : MonoBehaviour
                         flyTarget = -20;
                         if (lastTarget == flyTarget)
                         {
-                            switch (RNG.Next(1,3))
+                            switch (RNG.Next(1, 3))
                             {
                                 case 1:
                                     {
@@ -225,9 +235,9 @@ public class Witch : MonoBehaviour
             targetSet = true;
             lastTarget = flyTarget;
         }
-        
 
-        if(transform.position.x > flyTarget + 1 || transform.position.x < flyTarget - 1)
+
+        if (transform.position.x > flyTarget + 1 || transform.position.x < flyTarget - 1)
         {
             transform.position = Vector3.MoveTowards(transform.position, new Vector3(flyTarget, transform.position.y, transform.position.z), flySpeed * Time.deltaTime);
         }
@@ -240,7 +250,7 @@ public class Witch : MonoBehaviour
 
     private void FallState()
     {
-        if(currentPause > 0)
+        if (currentPause > 0)
         {
             currentPause--;
         }
@@ -249,23 +259,23 @@ public class Witch : MonoBehaviour
             transform.Translate(Vector3.down * fallSpeed * Time.deltaTime);
         }
 
-        if(transform.position.y >= 60)
+        if (transform.position.y >= 60)
         {
             HP--;
             currentState = WitchState.flying;
-            fallSpeed = Mathf.Abs(fallSpeed)/2;
+            fallSpeed = Mathf.Abs(fallSpeed) / 2;
             canHit = true;
         }
         else if (transform.position.y <= 0 && HP > 0)
         {
             damageSound.Play();
-            fallSpeed = -fallSpeed*2;
+            fallSpeed = -fallSpeed * 2;
         }
         else if (transform.position.y <= 5 && HP == 1)
         {
             damageSound.Play();
             HP--;
-            fallSpeed = fallSpeed * 0.1f;            
+            fallSpeed = fallSpeed * 0.1f;
             transform.position = new Vector3(transform.position.x, transform.position.y, -20);
         }
     }
@@ -277,13 +287,13 @@ public class Witch : MonoBehaviour
             transform.Translate(Vector3.down * Time.deltaTime * flySpeed);
         }
 
-        if(currentCast == castTime)
+        if (currentCast == castTime)
         {
             castSound.Play();
         }
 
 
-        if(currentCast > 0)
+        if (currentCast > 0)
         {
             castEffect.gameObject.SetActive(true);
             castEffect.Emit(1);
@@ -296,7 +306,7 @@ public class Witch : MonoBehaviour
             {
                 case 0:
                     {
-                        if(lastAttack != 0)
+                        if (lastAttack != 0)
                         {
                             for (int i = 0; i < spawns.Length; i++)
                             {
@@ -323,8 +333,8 @@ public class Witch : MonoBehaviour
                                         break;
                                     }
                             }
-                            
-                        }                       
+
+                        }
                         break;
                     }
                 case 1:
@@ -403,7 +413,7 @@ public class Witch : MonoBehaviour
 
     private void LightAttack()
     {
-        if(warning > 0)
+        if (warning > 0)
         {
             warning--;
             warningSprite.SetActive(true);
@@ -438,9 +448,37 @@ public class Witch : MonoBehaviour
                 mainPlatform.Translate(Vector3.down * 3 * Time.deltaTime);
             }
         }
-        else if((mainPlatform.position.y < -0.1 && HP != 1) || (HP == 1 && canHit == false && mainPlatform.position.y < -0.1))
+        else if ((mainPlatform.position.y < -0.1 && HP != 1) || (HP == 1 && canHit == false && mainPlatform.position.y < -0.1))
         {
             mainPlatform.Translate(Vector3.up * 4 * Time.deltaTime);
+        }
+    }
+
+    private void generatePattern()
+    {
+        int totalAtk = 0;
+
+        headAttack = new attackPattern();
+        headAttack.atckId = RNG.Next(1, 4);
+
+        totalAtk += headAttack.atckId;
+
+        attackPattern currentAttack = headAttack;
+
+        while (totalAtk < 6)
+        {
+            currentAttack.next = new attackPattern();
+            currentAttack = currentAttack.next;
+
+            if (totalAtk <= 3)
+            {
+                currentAttack.atckId = 4 - totalAtk;
+            }
+            else
+            {
+                currentAttack.atckId = 6 - totalAtk;
+            }
+
         }
     }
 }
