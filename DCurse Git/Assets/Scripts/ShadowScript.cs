@@ -21,7 +21,7 @@ public class ShadowScript : MonoBehaviour
         }
     }
 
-    private List<PlayerInfo> NextPos = new List<PlayerInfo>(); //List of player info structs that will be used as future positions
+    private Queue<PlayerInfo> NextPos = new Queue<PlayerInfo>(); //List of player info structs that will be used as future positions
     private float warmupFrames = 0; //Frames from activation to spawn
     private bool active = false; //Is the shadow active
 
@@ -43,20 +43,20 @@ public class ShadowScript : MonoBehaviour
     void Update()
     {
         //makes sure player is alive, when the shadow is activated
-        if(active && player.HP > 0)
+        if (active && player.HP > 0)
         {
             //plays warmupeffect and increments warmup timer
-            if(warmupFrames <= totalWarmup)
+            if (warmupFrames <= totalWarmup)
             {
                 warmupEffect.Play();
                 warmupFrames += Time.deltaTime * 10;
             }
 
             //adds the current information of the player o every frame to the info list
-            NextPos.Add(new PlayerInfo(player.transform.position, playerSprite.transform.localScale, playerSprite.transform.localRotation, playerSprite.GetComponent<SpriteRenderer>().sprite));
+            NextPos.Enqueue(new PlayerInfo(player.transform.position, playerSprite.transform.localScale, playerSprite.transform.localRotation, playerSprite.GetComponent<SpriteRenderer>().sprite));
 
             //stops effect when warmup frames run out
-            if(warmupFrames > totalWarmup)
+            if (warmupFrames > totalWarmup)
             {
                 Shadow.SetActive(true);
                 warmupEffect.Stop();
@@ -65,18 +65,19 @@ public class ShadowScript : MonoBehaviour
             }
         }
         //after warmup ends and player still alive
-        else if(!active && player.HP > 0 && warmupFrames > totalWarmup)
+        else if (!active && player.HP > 0 && warmupFrames > totalWarmup)
         {
             //adds the current information of the player o every frame to the info list
-            NextPos.Add(new PlayerInfo(player.transform.position, playerSprite.transform.localScale, playerSprite.transform.localRotation, playerSprite.GetComponent<SpriteRenderer>().sprite));
+            NextPos.Enqueue(new PlayerInfo(player.transform.position, playerSprite.transform.localScale, playerSprite.transform.localRotation, playerSprite.GetComponent<SpriteRenderer>().sprite));
+
 
             //Sets shadow information to the first player information on the list
-            Shadow.transform.position = NextPos[0].position;
-            Shadow.transform.localScale = NextPos[0].scale;
-            Shadow.transform.localRotation = NextPos[0].rotation;
-            Shadow.GetComponent<SpriteRenderer>().sprite = NextPos[0].sprite;
-            //Removes the already used value from the list
-            NextPos.RemoveAt(0);
+            PlayerInfo applyNext = NextPos.Dequeue();
+            Shadow.transform.position = applyNext.position;
+            Shadow.transform.localScale = applyNext.scale;
+            Shadow.transform.localRotation = applyNext.rotation;
+            Shadow.GetComponent<SpriteRenderer>().sprite = applyNext.sprite;
+
         }
     }
 
