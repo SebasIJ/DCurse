@@ -14,14 +14,11 @@ public class Witch : MonoBehaviour
         falling
     }
 
-    public class attackPattern
-    {
-        public int atckId;
-        public attackPattern next;
-    }
 
-    attackPattern headAttack;
-    attackPattern nextAttack;
+
+
+
+    //horFire headFire;
 
     public Transform shadowSprite;
     public Animator witchAnim;
@@ -53,11 +50,47 @@ public class Witch : MonoBehaviour
     public AudioSource castSound;
     public AudioSource damageSound;
 
+    public class FireNode
+    {
+        public int fireY;
+        public FireNode next;
+    }
+
+    public class LinkedFire
+    {
+        public FireNode headFire;
+
+        public void Add(int data)
+        {
+            FireNode newNode = new FireNode();
+            newNode.fireY = data;
+
+            if (headFire == null)
+            {
+                headFire = newNode;
+            }
+            else
+            {
+                FireNode currNode = headFire;
+
+                while (currNode.next != null)
+                {
+                    currNode = currNode.next;
+                }
+                currNode.next = newNode;
+            }
+        }
+    }
+
+    LinkedFire currentFire;
 
     // Start is called before the first frame update
     void Start()
     {
-        generatePattern();
+        currentFire = new LinkedFire();
+        currentFire.Add(RNG.Next(5, 20));
+        currentFire.Add(RNG.Next(5, 20));
+
         currentState = WitchState.flying;
         castEffect.Stop();
     }
@@ -265,6 +298,7 @@ public class Witch : MonoBehaviour
             currentState = WitchState.flying;
             fallSpeed = Mathf.Abs(fallSpeed) / 2;
             canHit = true;
+            currentFire.Add(RNG.Next(5, 20));
         }
         else if (transform.position.y <= 0 && HP > 0)
         {
@@ -302,7 +336,7 @@ public class Witch : MonoBehaviour
         }
         else
         {
-            switch (RNG.Next(3))
+            switch (RNG.Next(4))
             {
                 case 0:
                     {
@@ -403,6 +437,47 @@ public class Witch : MonoBehaviour
                         }
                         break;
                     }
+                case 3:
+                    {
+                        if (lastAttack != 3)
+                        {
+
+                            FireNode newFire = currentFire.headFire;
+
+                            while (newFire.next != null)
+                            {
+                                GameObject Fire = Instantiate(fireBall, new Vector3(-30, newFire.fireY, 0), Quaternion.Euler(new Vector3(0, 0, 90)));
+                                Fire.GetComponent<Rigidbody>().useGravity = false;
+                                Fire.GetComponent<Rigidbody>().AddForce(Vector3.right * 30, ForceMode.Impulse);
+                                newFire = newFire.next;
+                            }
+
+                        }
+                        else
+                        {
+                            switch (RNG.Next(2))
+                            {
+                                case 0:
+                                    {
+                                        for (int i = 0; i < spawns.Length; i++)
+                                        {
+                                            GameObject newFire = Instantiate(fireBall, new Vector3(spawns[i].position.x, 32, spawns[i].position.z), spawns[i].rotation);
+                                            newFire.GetComponent<Rigidbody>().AddForce(Vector3.down * RNG.Next(1, 3));
+                                        }
+                                        lastAttack = 0;
+                                        break;
+                                    }
+                                case 1:
+                                    {
+                                        sinkAtk = true;
+                                        lastAttack = 1;
+                                        break;
+                                    }
+                            }
+
+                        }
+                        break;
+                    }
             }
 
             castEffect.Stop();
@@ -454,31 +529,59 @@ public class Witch : MonoBehaviour
         }
     }
 
-    private void generatePattern()
-    {
-        int totalAtk = 0;
+    //private void HeadFireSet()
+    //{
+    //    headFire = new horFire();
+    //    headFire.fireY = RNG.Next(0, 100);
+    //}
 
-        headAttack = new attackPattern();
-        headAttack.atckId = RNG.Next(1, 4);
+    //private void AddFire()
+    //{
+    //    horFire newFire = new horFire();
+    //    newFire.fireY = RNG.Next(0, 100);
 
-        totalAtk += headAttack.atckId;
+    //    horFire temp = headFire;
+    //    while (temp.next != null)
+    //    {
+    //        temp = temp.next;
+    //    }
+    //    temp.next = newFire;
+    //}
 
-        attackPattern currentAttack = headAttack;
+    //IEnumerator spawnFire(int y)
+    //{
+    //    GameObject newFire = Instantiate(fireBall, new Vector3(-100, y, 0), Quaternion.Euler(new Vector3(0,0,90)));
+    //    newFire.GetComponent<Rigidbody>().useGravity = false;
+    //    newFire.GetComponent<Rigidbody>().AddForce(Vector3.right * 10);
 
-        while (totalAtk < 6)
-        {
-            currentAttack.next = new attackPattern();
-            currentAttack = currentAttack.next;
+    //    yield return new WaitForSeconds(1);
+    //}
 
-            if (totalAtk <= 3)
-            {
-                currentAttack.atckId = 4 - totalAtk;
-            }
-            else
-            {
-                currentAttack.atckId = 6 - totalAtk;
-            }
+    //private void generatePattern()
+    //{
+    //    int totalAtk = 0;
 
-        }
-    }
+    //    headAttack = new attackPattern();
+    //    headAttack.atckId = RNG.Next(1, 4);
+
+    //    totalAtk += headAttack.atckId;
+
+    //    attackPattern currentAttack = headAttack;
+
+    //    while (totalAtk < 6)
+    //    {
+    //        currentAttack.next = new attackPattern();
+    //        currentAttack = currentAttack.next;
+
+    //        if (totalAtk <= 3)
+    //        {
+    //            currentAttack.atckId = 4 - totalAtk;
+    //        }
+    //        else
+    //        {
+    //            currentAttack.atckId = 6 - totalAtk;
+    //        }
+
+    //    }
+    //}
 }
